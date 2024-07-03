@@ -60,9 +60,23 @@ endif(LIBCZI_BUILD_CURL_BASED_STREAM)
 add_subdirectory(libCZI)
 
 if (LIBCZI_BUILD_CZICMD)
+  # make "CLI11" available
+  FetchContent_Declare(
+    cli11
+    GIT_REPOSITORY https://github.com/CLIUtils/CLI11
+    GIT_TAG        v2.3.2
+  )
+
+  if (NOT cli11_POPULATED)
+    FetchContent_MakeAvailable(cli11)
+  endif()
+
  add_subdirectory(CZICmd)
+ add_subdirectory(czirepair)
 endif(LIBCZI_BUILD_CZICMD)
 
 if (LIBCZI_BUILD_UNITTESTS)
  add_subdirectory(libCZI_UnitTests)
 endif(LIBCZI_BUILD_UNITTESTS)
+
+

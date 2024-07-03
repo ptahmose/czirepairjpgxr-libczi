@@ -5,6 +5,8 @@
 #include "CziSubBlock.h"
 #include "CziUtils.h"
 
+#include "../JxrDecode/JxrDecode.h"
+
 using namespace libCZI;
 
 CCziSubBlock::CCziSubBlock(const libCZI::SubBlockInfo& info, const CCZIParse::SubBlockData& data, std::function<void(void*)> deleter)
@@ -82,4 +84,19 @@ CCziSubBlock::~CCziSubBlock()
 /*virtual*/std::shared_ptr<IBitmapData> CCziSubBlock::CreateBitmap()
 {
     return CreateBitmapFromSubBlock(this);
+}
+
+/*virtual*/bool CCziSubBlock::TryGetWidthAndHeightOfJpgxrCompressedBitmap(std::uint32_t& width, std::uint32_t& height) const
+{
+    if (this->GetSubBlockInfo().GetCompressionMode() != CompressionMode::JpgXr)
+    {
+        return false;
+    }
+
+    const void* ptr; size_t size;
+    this->DangerousGetRawData(ISubBlock::MemBlkType::Data, ptr, size);
+
+    auto info = JxrDecode::GetPixelFormatAndSize(ptr, size);
+    width = std::get<1>(info);
+    height = std::get<2>(info);
 }

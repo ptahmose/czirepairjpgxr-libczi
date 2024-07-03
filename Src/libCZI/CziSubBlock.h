@@ -22,6 +22,7 @@ public:
 
     // interface ISubBlock
     const libCZI::SubBlockInfo& GetSubBlockInfo() const override;
+    bool TryGetWidthAndHeightOfJpgxrCompressedBitmap(std::uint32_t& width, std::uint32_t& height) const override;
     void DangerousGetRawData(libCZI::ISubBlock::MemBlkType type, const void*& ptr, size_t& size) const override;
     std::shared_ptr<const void> GetRawData(MemBlkType type, size_t* ptrSize) override;
     std::shared_ptr<libCZI::IBitmapData> CreateBitmap() override;

@@ -85,7 +85,7 @@ public:
     /// * The 'get_destination_func' is called, passing in the pixel type, width, and height (as determined in the step before).    
     /// * The 'get_destination_func' function  now is to check whether it can receive the bitmap (as reported). If it cannot, it   
     ///   must throw an exception (which will be propagated to the caller). Otherwise, it must return a tuple, containing
-    ///   a pointer to a buffer that can hold the uncompressed bitmap and the stride. This buffer must remain valid until the
+    ///   a pointer to a buffer that can hold the uncompressed bitmap and the stride. This buffer must remain valid until
     ///   the function returns - either normally or by throwing an exception.
     /// Notes:
     /// * The decoder will call the 'get_destination_func' function only once, and the buffer must be valid  
@@ -100,6 +100,8 @@ public:
             const void* ptrData,
             size_t size,
             const std::function<std::tuple<void*/*destination_bitmap*/, std::uint32_t/*stride*/>(PixelFormat pixel_format, std::uint32_t  width, std::uint32_t  height)>& get_destination_func);
+
+    static std::tuple< PixelFormat , std::uint32_t  , std::uint32_t  > GetPixelFormatAndSize(const void* ptrData, size_t size);
 
     /// Compresses the specified bitmap into the JXR (aka JPEG XR) format.
     /// 

@@ -337,6 +337,8 @@ namespace libCZI
         /// \return The bitmap (contained in this sub-block).
         virtual std::shared_ptr<IBitmapData> CreateBitmap() = 0;
 
+        virtual bool TryGetWidthAndHeightOfJpgxrCompressedBitmap(std::uint32_t& width, std::uint32_t& height) const = 0;
+
         virtual ~ISubBlock() = default;
 
         /// A helper method used to cast the pointer to a specific type.

@@ -198,6 +198,87 @@ void JxrDecode::Decode(
     }
 }
 
+/*static*/std::tuple<JxrDecode::PixelFormat, std::uint32_t, std::uint32_t> JxrDecode::GetPixelFormatAndSize(const void* ptrData, size_t size)
+{
+    if (ptrData == nullptr)
+    {
+        throw invalid_argument("ptrData");
+    }
+
+    if (size == 0)
+    {
+        throw invalid_argument("size");
+    }
+
+    WMPStream* pStream = nullptr;
+    ERR err = CreateWS_Memory(&pStream, const_cast<void*>(ptrData), size);
+    if (Failed(err))
+    {
+        // note: the call "CreateWS_Memory" cannot fail (or the only way it can fail is that the memory allocation fails),
+        //        so we do not have to release/free the stream object here.
+        ThrowJxrlibError("'CreateWS_Memory' failed", err);
+    }
+
+    unique_ptr<WMPStream, void(*)(WMPStream*)> upStream(pStream, [](WMPStream* p)->void {p->Close(&p); });
+
+    PKImageDecode* pDecoder = nullptr;
+    err = PKCodecFactory_CreateDecoderFromStream(pStream, &pDecoder);
+    if (Failed(err))
+    {
+        // unfortunately, "PKCodecFactory_CreateDecoderFromStream" may fail leaving us with a partially constructed
+        //  decoder object, so we need to release/free the decoder object here.
+        if (pDecoder != nullptr)
+        {
+            pDecoder->Release(&pDecoder);
+        }
+
+        ThrowJxrlibError("'PKCodecFactory_CreateDecoderFromStream' failed", err);
+    }
+
+    // construct a smart pointer which will destroy the decoder object when it goes out of scope
+    std::unique_ptr<PKImageDecode, void(*)(PKImageDecode*)> upDecoder(pDecoder, [](PKImageDecode* p)->void {p->Release(&p); });
+
+    U32 frame_count;
+    err = upDecoder->GetFrameCount(upDecoder.get(), &frame_count);
+    if (Failed(err))
+    {
+        ThrowJxrlibError("'decoder::GetFrameCount' failed", err);
+    }
+
+    if (frame_count != 1)
+    {
+        ostringstream string_stream;
+        string_stream << "Expecting to find a frame_count of 1, but found frame_count = ." << frame_count;
+        throw runtime_error(string_stream.str());
+    }
+
+    I32 width, height;
+    upDecoder->GetSize(upDecoder.get(), &width, &height);
+    if (Failed(err))
+    {
+        ThrowJxrlibError("'decoder::GetSize' failed", err);
+    }
+
+    PKPixelFormatGUID pixel_format_of_decoder;
+    upDecoder->GetPixelFormat(upDecoder.get(), &pixel_format_of_decoder);
+    if (Failed(err))
+    {
+        ThrowJxrlibError("'decoder::GetPixelFormat' failed", err);
+    }
+
+    const auto jxrpixel_format = JxrPixelFormatGuidToEnum(pixel_format_of_decoder);
+    if (jxrpixel_format == JxrDecode::PixelFormat::kInvalid)
+    {
+        ostringstream string_stream;
+        string_stream << "Unsupported pixel format: {";
+        WriteGuidToStream(string_stream, pixel_format_of_decoder);
+        string_stream << "}";
+        throw runtime_error(string_stream.str());
+    }
+
+    return make_tuple(jxrpixel_format, width, height);
+}
+
 /*static*/JxrDecode::CompressedData JxrDecode::Encode(
                     JxrDecode::PixelFormat pixel_format,
                     std::uint32_t width,
