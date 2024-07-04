@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include "../libCZI/libCZI.h"
+#include "../libCZI/CziParse.h"
 
 class RepairUtilities
 {
@@ -19,6 +20,9 @@ public:
   };
 public:
   static std::vector<SubBlockDimensionInfoRepairInfo> GetRepairInfo(libCZI::ICZIReader* reader);
+
+
+  static void PatchSubBlockDimensionInfo(libCZI::IInputOutputStream* io_stream,const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list);
 
 private:
 

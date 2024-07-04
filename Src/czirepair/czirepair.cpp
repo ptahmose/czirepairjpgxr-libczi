@@ -43,10 +43,17 @@ int main(int argc, char** argv)
 
 void DryRun(const CommandLineOptions& options)
 {
-    shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
-    auto spReader = libCZI::CreateCZIReader();
-    spReader->Open(stream);
+    vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info;
 
-    auto repair_info = RepairUtilities::GetRepairInfo(spReader.get());
+    {
+        shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
+        auto spReader = libCZI::CreateCZIReader();
+        spReader->Open(stream);
 
+        repair_info = RepairUtilities::GetRepairInfo(spReader.get());
+    }
+
+    shared_ptr<IInputOutputStream> input_output_stream = libCZI::CreateInputOutputStreamForFile(options.GetCZIFilename().c_str());
+    RepairUtilities::PatchSubBlockDimensionInfo(input_output_stream.get(), repair_info);
+    input_output_stream.reset();
 }

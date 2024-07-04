@@ -152,6 +152,11 @@ public:
 
     static void ReadSubBlockDirectory(libCZI::IStream* str, std::uint64_t offset, const std::function<void(const CCziSubBlockDirectoryBase::SubBlkEntry&)>& addFunc, const SubblockDirectoryParseOptions& options, SegmentSizes* segmentSizes);
 
+    static void InplacePatchSubBlockDirectory(
+                        libCZI::IInputOutputStream* stream,
+                        std::uint64_t offset,
+                        const std::function<bool(int sub_block_index, std::int32_t size, std::int32_t& new_coordinate)>& patchFunc);
+
     struct SubBlockStorageAllocate
     {
         std::function<void* (size_t size)> alloc;

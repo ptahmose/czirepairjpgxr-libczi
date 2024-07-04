@@ -44,3 +44,35 @@ std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::G
 
     return result;
 }
+
+void RepairUtilities::PatchSubBlockDimensionInfo(libCZI::IInputOutputStream* io_stream, const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list)
+{
+    CFileHeaderSegmentData file_header_segment_data = CCZIParse::ReadFileHeaderSegmentData(io_stream);
+
+    CCZIParse::InplacePatchSubBlockDirectory(
+        io_stream,
+        file_header_segment_data.GetSubBlockDirectoryPosition(),
+        [&](int sub_block_index, std::int32_t size, std::int32_t& new_coordinate)->bool
+        {
+            for (const auto& repair_info : patch_list)
+            {
+                if (repair_info.sub_block_index == sub_block_index)
+                {
+                    if (repair_info.IsFixedSizeXValid())
+                    {
+                        new_coordinate = repair_info.fixed_size_x;
+                        return true;
+                    }
+
+                    if (repair_info.IsFixedSizeYValid())
+                    {
+                        new_coordinate = repair_info.fixed_size_y;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        });
+
+}
