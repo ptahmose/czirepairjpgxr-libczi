@@ -157,6 +157,11 @@ public:
                         std::uint64_t offset,
                         const std::function<bool(int sub_block_index, char dimension_identifier, std::int32_t size, std::int32_t& new_coordinate)>& patchFunc);
 
+    static void InplacePatchSubblock(
+                        libCZI::IInputOutputStream* stream,
+                        std::uint64_t offset,
+                        const std::function<bool(char dimension_identifier, std::int32_t size, std::int32_t& new_coordinate)>& patchFunc);
+
     struct SubBlockStorageAllocate
     {
         std::function<void* (size_t size)> alloc;
@@ -178,7 +183,7 @@ public:
         libCZI::IntRect         logicalRect;
         libCZI::IntSize         physicalSize;
         int                     mIndex;         // if not present, then this is int::max
-        std::uint8_t            spare[6];   
+        std::uint8_t            spare[6];
     };
 
     static SubBlockData ReadSubBlock(libCZI::IStream* str, std::uint64_t offset, const SubBlockStorageAllocate& allocateInfo);

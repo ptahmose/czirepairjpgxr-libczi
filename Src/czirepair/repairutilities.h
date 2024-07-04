@@ -1,6 +1,5 @@
 #pragma once
 
-#include <optional>
 #include <cstdint>
 #include <vector>
 #include "../libCZI/libCZI.h"
@@ -23,6 +22,7 @@ public:
 
 
   static void PatchSubBlockDimensionInfo(libCZI::IInputOutputStream* io_stream,const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list);
+  static void PatchSubBlocks(libCZI::IInputOutputStream* io_stream, const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list);
 
 private:
 

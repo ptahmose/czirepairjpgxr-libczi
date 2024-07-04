@@ -267,7 +267,7 @@ using namespace libCZI;
                     dimension_entry.Size = new_size;
                     stream->Write(
                         offset - sizeof(DimensionEntryDV) + offsetof(DimensionEntryDV, StoredSize),
-                        &new_size, 
+                        &new_size,
                         sizeof(int32_t),
                         nullptr);
                 }
@@ -552,6 +552,101 @@ using namespace libCZI;
     sbd.ptrMetadata = pMetadataBuffer.release();
     sbd.metaDataSize = subBlckSegment.data.MetadataSize;
     return sbd;
+}
+
+
+/*static*/void CCZIParse::InplacePatchSubblock(
+                    libCZI::IInputOutputStream* stream,
+                    std::uint64_t offset,
+                    const std::function<bool(char dimension_identifier, std::int32_t size, std::int32_t& new_coordinate)>& patchFunc)
+{
+    SubBlockSegment subBlckSegment;
+    std::uint64_t bytesRead;
+
+    // the minimum guaranteed size we can read here is "sizeof(SegmentHeader) + SIZE_SUBBLOCKDATA_MINIMUM", it is NOT sizeof(SubBlockSegment)
+    const uint64_t MinSizeSubBlockSegment = sizeof(SegmentHeader) + SIZE_SUBBLOCKDATA_MINIMUM;
+
+    try
+    {
+        stream->Read(offset, &subBlckSegment, MinSizeSubBlockSegment, &bytesRead);
+        size_t s1 = offsetof(SubBlockSegment, data);
+        size_t s2 = offsetof(SubBlockSegmentData, entryDV);
+        offset += offsetof(SubBlockSegment, data) + offsetof(SubBlockSegmentData, entryDV) + offsetof(SubBlockDirectoryEntryDV, DimensionEntries[0]);
+    }
+    catch (const std::exception&)
+    {
+        std::throw_with_nested(LibCZIIOException("Error reading SubBlock-Segment", offset, MinSizeSubBlockSegment));
+    }
+
+    if (bytesRead != MinSizeSubBlockSegment)
+    {
+        CCZIParse::ThrowNotEnoughDataRead(offset, sizeof(subBlckSegment), bytesRead);
+    }
+
+    ConvertToHostByteOrder::Convert(&subBlckSegment);
+
+    if (memcmp(subBlckSegment.header.Id, CCZIParse::SUBBLKMAGIC, 16) != 0)
+    {
+        CCZIParse::ThrowIllegalData(offset, "Invalid SubBlock-magic");
+    }
+
+    uint32_t lengthSubblockSegmentData = 0;
+    SubBlockData sbd;
+    if (subBlckSegment.data.entrySchema[0] == 'D' && subBlckSegment.data.entrySchema[1] == 'V')
+    {
+        ConvertToHostByteOrder::Convert(&subBlckSegment.data.entryDV);
+        sbd.compression = subBlckSegment.data.entryDV.Compression;
+        sbd.pixelType = subBlckSegment.data.entryDV.PixelType;
+        sbd.mIndex = (std::numeric_limits<int>::max)();
+        memcpy(sbd.spare, subBlckSegment.data.entryDV._spare, sizeof(sbd.spare));
+
+        if (subBlckSegment.data.entryDV.DimensionCount > MAXDIMENSIONS)
+        {
+            stringstream ss;
+            ss << "'DimensionCount' was found to be " << subBlckSegment.data.entryDV.DimensionCount << ", where the maximum allowed is " << MAXDIMENSIONS << ".";
+            CCZIParse::ThrowIllegalData(
+                offset + sizeof(SegmentHeader) + SIZE_SUBBLOCKDATA_FIXEDPART + offsetof(SubBlockDirectoryEntryDV, DimensionCount),
+                ss.str().c_str());
+        }
+
+        for (int dimension = 0; dimension < subBlckSegment.data.entryDV.DimensionCount; ++dimension)
+        {
+            DimensionEntryDV dimension_entry;
+            stream->Read(offset, &dimension_entry, sizeof(DimensionEntryDV), &bytesRead);
+            offset += sizeof(DimensionEntryDV);
+            ConvertToHostByteOrder::Convert(&dimension_entry, 1);
+
+            char dimension_identifier;
+            if (IsXDimension(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)))
+            {
+                dimension_identifier = 'X';
+            }
+            else if (IsYDimension(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)))
+            {
+                dimension_identifier = 'Y';
+            }
+            else if (IsMDimension(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)))
+            {
+                dimension_identifier = 'M';
+            }
+            else
+            {
+                dimension_identifier = Utils::DimensionToChar(CCZIParse::DimensionCharToDimensionIndex(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)));
+            }
+
+            int32_t new_size;
+            bool was_patched = patchFunc(dimension_identifier, dimension_entry.StoredSize, new_size);
+            if (was_patched == true)
+            {
+                dimension_entry.Size = new_size;
+                stream->Write(
+                    offset - sizeof(DimensionEntryDV) + offsetof(DimensionEntryDV, StoredSize),
+                    &new_size,
+                    sizeof(int32_t),
+                    nullptr);
+            }
+        }
+    }
 }
 
 /*static*/CCZIParse::AttachmentData CCZIParse::ReadAttachment(libCZI::IStream* str, std::uint64_t offset, const SubBlockStorageAllocate& allocateInfo)

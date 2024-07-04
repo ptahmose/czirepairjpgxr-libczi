@@ -77,5 +77,6 @@ void Patch(const CommandLineOptions& options)
 
     shared_ptr<IInputOutputStream> input_output_stream = libCZI::CreateInputOutputStreamForFile(options.GetCZIFilename().c_str());
     RepairUtilities::PatchSubBlockDimensionInfo(input_output_stream.get(), repair_info);
+    RepairUtilities::PatchSubBlocks(input_output_stream.get(), repair_info);
     input_output_stream.reset();
 }

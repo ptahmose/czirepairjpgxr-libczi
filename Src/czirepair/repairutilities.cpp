@@ -79,5 +79,43 @@ void RepairUtilities::PatchSubBlockDimensionInfo(libCZI::IInputOutputStream* io_
 
             return false;
         });
+}
 
+void RepairUtilities::PatchSubBlocks(libCZI::IInputOutputStream* io_stream, const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list)
+{
+    CFileHeaderSegmentData file_header_segment_data = CCZIParse::ReadFileHeaderSegmentData(io_stream);
+    CCZIParse::SubblockDirectoryParseOptions subblock_directory_parse_options;
+    subblock_directory_parse_options.SetLaxParsing();
+    auto sub_block_directory = CCZIParse::ReadSubBlockDirectory(io_stream, file_header_segment_data.GetSubBlockDirectoryPosition(), subblock_directory_parse_options);
+
+    for (const auto& repair_info : patch_list)
+    {
+        CCziSubBlockDirectoryBase::SubBlkEntry sub_block_entry;
+        sub_block_directory.TryGetSubBlock(repair_info.sub_block_index, sub_block_entry);
+
+        CCZIParse::InplacePatchSubblock(
+                io_stream,
+                sub_block_entry.FilePosition,
+                [&](char dimension_identifier, std::int32_t size, std::int32_t& new_coordinate)->bool
+                {
+                    if (dimension_identifier != 'X' && dimension_identifier != 'Y')
+                    {
+                        return false;
+                    }
+
+                    if (repair_info.IsFixedSizeXValid() && dimension_identifier == 'X')
+                    {
+                        new_coordinate = repair_info.fixed_size_x;
+                        return true;
+                    }
+
+                    if (repair_info.IsFixedSizeYValid() && dimension_identifier == 'Y')
+                    {
+                        new_coordinate = repair_info.fixed_size_y;
+                        return true;
+                    }
+
+                    return false;
+                });
+    }
 }
