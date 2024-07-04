@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include "repairutilities.h"
 #include "utilities.h"
 
 #include "../libCZI/libCZI.h"
@@ -46,23 +47,6 @@ void DryRun(const CommandLineOptions& options)
     auto spReader = libCZI::CreateCZIReader();
     spReader->Open(stream);
 
-    for (int i = 0;; ++i)
-    {
-        auto sub_block = spReader->ReadSubBlock(i);
+    auto repair_info = RepairUtilities::GetRepairInfo(spReader.get());
 
-        if (!sub_block)
-        {
-            break;
-        }
-
-        uint32_t width, height;
-        sub_block->TryGetWidthAndHeightOfJpgxrCompressedBitmap(width, height);
-
-        auto subblock_info = sub_block->GetSubBlockInfo();
-
-        if (subblock_info.physicalSize.w != width || subblock_info.physicalSize.h != height)
-        {
-            cout << "Subblock " << i << ": subblock_info: " << subblock_info.physicalSize.w << "x" << subblock_info.physicalSize.h << ", decompressed size: " << width << "x" << height << endl;
-        }
-    }
 }

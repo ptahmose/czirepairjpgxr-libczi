@@ -1,0 +1,46 @@
+#include "repairutilities.h"
+
+#include <iostream>
+
+using namespace std;
+using namespace libCZI;
+
+std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::GetRepairInfo(libCZI::ICZIReader* reader)
+{
+    std::vector<SubBlockDimensionInfoRepairInfo> result;
+
+    reader->EnumerateSubBlocks(
+        [&](int index, const SubBlockInfo& subblock_info)->bool
+        {
+            if (subblock_info.GetCompressionMode() == CompressionMode::JpgXr)
+            {
+                auto sub_block = reader->ReadSubBlock(index);
+
+                uint32_t width_from_jpgxr, height_from_jpgxr;
+                sub_block->TryGetWidthAndHeightOfJpgxrCompressedBitmap(width_from_jpgxr, height_from_jpgxr);
+
+                SubBlockDimensionInfoRepairInfo repair_info;
+                repair_info.sub_block_index = index;
+                if (subblock_info.physicalSize.w != width_from_jpgxr)
+                {
+                    repair_info.fixed_size_x = width_from_jpgxr;
+                }
+
+                if (subblock_info.physicalSize.h != height_from_jpgxr)
+                {
+                    repair_info.fixed_size_y = height_from_jpgxr;
+                }
+
+                if (repair_info.IsFixedSizeXValid() || repair_info.IsFixedSizeYValid())
+                {
+                    result.push_back(repair_info);
+
+                    cout << "Subblock " << index << ": subblock_info: " << subblock_info.physicalSize.w << "x" << subblock_info.physicalSize.h << ", size of JPGXR: " << width_from_jpgxr << "x" << height_from_jpgxr << endl;
+                }
+            }
+
+            return true;
+        });
+
+    return result;
+}

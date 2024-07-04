@@ -1,7 +1,12 @@
 set (CZIREPAIRFILES
         commandlineoptions.h
         commandlineoptions.cpp
-        czirepair.cpp "utilities.h" "utilities.cpp" "platform_defines.h")
+        czirepair.cpp 
+        "utilities.h" 
+        "utilities.cpp" 
+        "platform_defines.h" 
+        "repairutilities.cpp"
+        "repairutilities.h")
 
 add_executable(CZIrepair ${CZIREPAIRFILES})
 
