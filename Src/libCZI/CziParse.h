@@ -155,7 +155,7 @@ public:
     static void InplacePatchSubBlockDirectory(
                         libCZI::IInputOutputStream* stream,
                         std::uint64_t offset,
-                        const std::function<bool(int sub_block_index, std::int32_t size, std::int32_t& new_coordinate)>& patchFunc);
+                        const std::function<bool(int sub_block_index, char dimension_identifier, std::int32_t size, std::int32_t& new_coordinate)>& patchFunc);
 
     struct SubBlockStorageAllocate
     {

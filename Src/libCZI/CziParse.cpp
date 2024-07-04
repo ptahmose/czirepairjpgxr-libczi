@@ -156,7 +156,7 @@ using namespace libCZI;
         });
 }
 
-/*static*/void CCZIParse::InplacePatchSubBlockDirectory(libCZI::IInputOutputStream* stream, std::uint64_t offset, const std::function<bool(int sub_block_index, int32_t size, int32_t& new_size)>& patchFunc)
+/*static*/void CCZIParse::InplacePatchSubBlockDirectory(libCZI::IInputOutputStream* stream, std::uint64_t offset, const std::function<bool(int sub_block_index, char dimension_identifier, int32_t size, int32_t& new_size)>& patchFunc)
 {
     SubBlockDirectorySegment subBlckDirSegment;
     std::uint64_t bytesRead;
@@ -242,12 +242,34 @@ using namespace libCZI;
                 offset += sizeof(DimensionEntryDV);
                 ConvertToHostByteOrder::Convert(&dimension_entry, 1);
 
-                int32_t new_size ;
-                bool was_patched = patchFunc(i, dimension_entry.StoredSize, new_size);
+                char dimension_identifier;
+                if (IsXDimension(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)))
+                {
+                    dimension_identifier = 'X';
+                }
+                else if (IsYDimension(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)))
+                {
+                    dimension_identifier = 'Y';
+                }
+                else if (IsMDimension(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)))
+                {
+                    dimension_identifier = 'M';
+                }
+                else
+                {
+                    dimension_identifier = Utils::DimensionToChar(CCZIParse::DimensionCharToDimensionIndex(dimension_entry.Dimension, sizeof(dimension_entry.Dimension)));
+                }
+
+                int32_t new_size;
+                bool was_patched = patchFunc(i, dimension_identifier, dimension_entry.StoredSize, new_size);
                 if (was_patched == true)
                 {
                     dimension_entry.Size = new_size;
-                    //                    stream->Write(offset, &dimension_entry, sizeof(DimensionEntryDV));
+                    stream->Write(
+                        offset - sizeof(DimensionEntryDV) + offsetof(DimensionEntryDV, StoredSize),
+                        &new_size, 
+                        sizeof(int32_t),
+                        nullptr);
                 }
             }
         }

@@ -12,6 +12,7 @@ using namespace std;
 using namespace libCZI;
 
 static void DryRun(const CommandLineOptions& options);
+static void Patch(const CommandLineOptions& options);
 
 int main(int argc, char** argv)
 {
@@ -36,12 +37,33 @@ int main(int argc, char** argv)
     std::cout << "Command: " << static_cast<int>(options.GetCommand()) << std::endl;
     //std::cout << "CZI filename: " << options.GetCZIFilename() << std::endl;
 
-    DryRun(options);
+    if (options.GetCommand() == Command::DryRun)
+    {
+        DryRun(options);
+    }
+    else if (options.GetCommand() == Command::Patch)
+    {
+        Patch(options);
+    }
+
 
     return 0;
 }
 
 void DryRun(const CommandLineOptions& options)
+{
+    vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info;
+
+    {
+        shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
+        auto spReader = libCZI::CreateCZIReader();
+        spReader->Open(stream);
+
+        repair_info = RepairUtilities::GetRepairInfo(spReader.get());
+    }
+}
+
+void Patch(const CommandLineOptions& options)
 {
     vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info;
 
