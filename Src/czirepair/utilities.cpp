@@ -33,7 +33,7 @@ std::string Utilities::convertToUtf8(const std::wstring& wide_str)
     return utf8_str;
 #else
     std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
-    std::string conv = utf8_conv.to_bytes(str);
+    std::string conv = utf8_conv.to_bytes(wide_str);
     return conv;
 #endif
 }
@@ -57,7 +57,7 @@ std::wstring Utilities::convertUtf8ToUCS2(const std::string& utf8_str)
     return wide_str;
 #else
     std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8conv;
-    std::wstring conv = utf8conv.from_bytes(str);
+    std::wstring conv = utf8conv.from_bytes(utf8_str);
     return conv;
 #endif
 }
