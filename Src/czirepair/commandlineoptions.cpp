@@ -131,5 +131,5 @@ CommandLineOptions::ParseResult CommandLineOptions::CommandLineOptions::Parse(in
 
 bool CommandLineOptions::IsVerbosityGreaterOrEqual(Verbosity verbosity) const
 {
-    return static_cast<underlying_type_t<Verbosity>>(this->verbosity_) >= static_cast<underlying_type_t<Verbosity>>(verbosity);
+    return static_cast<typename underlying_type<Verbosity>::type>(this->verbosity_) >= static_cast<typename underlying_type<Verbosity>::type>(verbosity);
 }
