@@ -101,7 +101,10 @@ jobs:
         shell: bash
         run: |
           ls -l "${{github.workspace}}/build"
-          ls -l "${{github.workspace}}/build/x64-Release/Src/czirepair/"
+          echo "#########################################################"
+          ls -l "${{github.workspace}}/build/Src"
+          echo "#########################################################"
+          ls -l "${{github.workspace}}/build/Src/czirepair/"
           mkdir "${{github.workspace}}/release""
           cp ../build/x64-Release/Src/czirepair/*.exe release/
           cp ./THIRD_PARTY_LICENSES.txt release/
