@@ -100,16 +100,9 @@ jobs:
         id: create_artifact
         shell: bash
         run: |
-          ls -l "${{github.workspace}}/build"
-          echo "#########################################################"
-          ls -l "${{github.workspace}}/build/Src"
-          echo "#########################################################"
-          ls -l "${{github.workspace}}/build/Src/czirepair/"
-          echo "#########################################################"
-          ls -l "${{github.workspace}}/build/Src/czirepair/release"
           mkdir "${{github.workspace}}/release"
           cp "${{github.workspace}}/build/Src/czirepair/release/CZIrepair.exe" release/
           cp "${{github.workspace}}/THIRD_PARTY_LICENSES.txt" release/
           name="CZIrepair-windows-win64-$(git describe --always)"
           echo "name=${name}" >> "$GITHUB_OUTPUT"
-          echo "path=release" >> "$GITHUB_OUTPUT
+          echo "path=release" >> "$GITHUB_OUTPUT"
