@@ -52,14 +52,32 @@ int main(int argc, char** argv)
 
 void DryRun(const CommandLineOptions& options)
 {
-    vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info;
+    shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
+    auto reader = libCZI::CreateCZIReader();
+    reader->Open(stream);
 
+    vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info = RepairUtilities::GetRepairInfo(reader.get());
+
+    if (repair_info.empty())
     {
-        shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
-        auto spReader = libCZI::CreateCZIReader();
-        spReader->Open(stream);
+        cout << "No repair needed." << endl;
+    }
+    else
+    {
+        cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << endl;
 
-        repair_info = RepairUtilities::GetRepairInfo(spReader.get());
+        if (options.IsVerbosityGreaterOrEqual(Verbosity::Verbose))
+        {
+            for (const auto& info : repair_info)
+            {
+                SubBlockInfo sub_block_info;
+                reader->TryGetSubBlockInfo(info.sub_block_index, &sub_block_info);
+                cout << "SubBlockIndex: " << info.sub_block_index << " -> size in 'dimension_info': " <<
+                    sub_block_info.physicalSize.w << "x" << sub_block_info.physicalSize.h << ", JPGXR: " <<
+                    (info.IsFixedSizeXValid() ? info.fixed_size_x : sub_block_info.physicalSize.w) << "x" << 
+                    (info.IsFixedSizeYValid() ? info.fixed_size_y : sub_block_info.physicalSize.h) << endl;
+            }
+        }
     }
 }
 

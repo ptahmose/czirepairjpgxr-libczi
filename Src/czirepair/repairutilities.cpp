@@ -34,8 +34,6 @@ std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::G
                 if (repair_info.IsFixedSizeXValid() || repair_info.IsFixedSizeYValid())
                 {
                     result.push_back(repair_info);
-
-                    cout << "Subblock " << index << ": subblock_info: " << subblock_info.physicalSize.w << "x" << subblock_info.physicalSize.h << ", size of JPGXR: " << width_from_jpgxr << "x" << height_from_jpgxr << endl;
                 }
             }
 

@@ -4,11 +4,22 @@
 
 enum class Command
 {
-    Invalid,
+    Invalid = 0,
 
     DryRun,
 
     Patch,
+};
+
+enum class Verbosity
+{
+    Invalid = 0,
+
+    Quiet,
+
+    Normal,
+
+    Verbose,
 };
 
 class CommandLineOptions
@@ -24,10 +35,16 @@ public:
 private:
     std::wstring czi_filename_;
     Command command_{ Command::Invalid };
+    Verbosity verbosity_{ Verbosity::Normal };
 
 public:
     ParseResult Parse(int argc, char** argv);
 
     const std::wstring& GetCZIFilename() const { return this->czi_filename_; }
     Command GetCommand() const { return this->command_; }
+    Verbosity GetVerbosity() const { return this->verbosity_; }
+
+    bool IsVerbosityGreaterOrEqual(Verbosity verbosity) const;
+
+    static bool TryParseVerbosityLevel(const std::string& s, Verbosity* verbosity);
 };
