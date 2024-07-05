@@ -49,24 +49,36 @@ CommandLineOptions::ParseResult CommandLineOptions::CommandLineOptions::Parse(in
 
     CLI::App cli_app{ };
 
+    cli_app.footer(
+    "This tool will check if the width/height specified at CZI-format level for\n"
+    "a sub-block matches the actual size of the JPGXR-compressed bitmap data.\n"
+    "In case of a discrepancy, it will patch the width/height in the CZI.\n"
+    "IMPORTANT: This tool is provided \"as is\" and use of this tool carries\n"
+    "inherent risk. Creating a backup is highly recommended. Success and\n"
+    "accuracy of results cannot be guaranteed.\n");
+
     Command argument_command;
     string argument_source_filename;
     string argument_verbosity;
 
     cli_app.add_option("-c,--command", argument_command,
-        R"(Can be one of 'DryRun' or 'Patch' - only with 'Patch' the CZI-file is modified. Default is 'DryRun'.)")
+        "Can be one of 'DryRun' or 'Patch' - only with\n'"
+        "Patch' the CZI-file is modified. Default is\n"
+        "'DryRun'.")
         ->default_val(Command::DryRun)
         ->option_text("COMMAND")
         ->transform(CLI::CheckedTransformer(map_string_to_command, CLI::ignore_case));
 
     cli_app.add_option("-v,--verbosity", argument_verbosity,
-            "Set the verbosity of the output to stdout of the program. Can be either 'quiet', 'normal' or 'verbose'.")
+        "Set the verbosity of the output to stdout of the\n"
+        "program. Can be either 'quiet', 'normal' or\n"
+        "'verbose'.")
         ->option_text("VERBOSITY")
         ->check(verbosity_validator);
 
     cli_app.add_option("-f,--file", argument_source_filename,
         "Specifies the CZI-file to operate on.")
-        ->option_text("SOURCEFILE");
+        ->option_text("CZIFILE");
 
     try
     {
