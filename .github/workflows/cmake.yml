@@ -105,8 +105,10 @@ jobs:
           ls -l "${{github.workspace}}/build/Src"
           echo "#########################################################"
           ls -l "${{github.workspace}}/build/Src/czirepair/"
-          mkdir "${{github.workspace}}/release""
-          cp ../build/x64-Release/Src/czirepair/*.exe release/
+          echo "#########################################################"
+          ls -l "${{github.workspace}}/build/Src/czirepair/release"
+          mkdir "${{github.workspace}}/release"
+          cp ../build/x64-Release/Src/czirepair/release/*.exe release/
           cp ./THIRD_PARTY_LICENSES.txt release/
           name="CZIrepair-windows-win64-$(git describe --always)"
           echo "name=${name}" >> "$GITHUB_OUTPUT"

@@ -96,7 +96,8 @@ CCziSubBlock::~CCziSubBlock()
     const void* ptr; size_t size;
     this->DangerousGetRawData(ISubBlock::MemBlkType::Data, ptr, size);
 
-    auto info = JxrDecode::GetPixelFormatAndSize(ptr, size);
-    width = std::get<1>(info);
-    height = std::get<2>(info);
+    auto jpgxr_compressed_bitmap_info = JxrDecode::GetPixelFormatAndSize(ptr, size);
+    width = std::get<1>(jpgxr_compressed_bitmap_info);
+    height = std::get<2>(jpgxr_compressed_bitmap_info);
+    return true;
 }
