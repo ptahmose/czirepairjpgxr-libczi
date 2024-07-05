@@ -7,8 +7,8 @@
 class Utilities
 {
 public:
-    static std::string convertToUtf8(const std::wstring& str);
-    static std::wstring convertUtf8ToUCS2(const std::string& str);
+    static std::string convertToUtf8(const std::wstring& wide_str);
+    static std::wstring convertUtf8ToUCS2(const std::string& utf8_str);
 };
 
 #if defined(WIN32ENV)

@@ -69,31 +69,6 @@ jobs:
         # Use debug flag to show all exeucted tests
         run: ctest --debug -C ${{matrix.build}}
 
-      # # Coverage collection based on https://about.codecov.io/blog/how-to-set-up-codecov-with-c-plus-plus-and-github-actions/
-      # - name: Prepare Coverage
-      #   if: ${{ (matrix.OS == 'windows-latest') && ( matrix.build == 'Debug') }}
-      #   run: |
-      #     choco install OpenCppCoverage -y --no-progress
-      #     echo "C:\Program Files\OpenCppCoverage" >> "$env:GITHUB_PATH"
-
-      # - name: Get Coverage
-      #   if: ${{ (matrix.OS == 'windows-latest') && ( matrix.build == 'Debug') }}
-      #   working-directory: ${{github.workspace}}/build/Src/libCZI_UnitTests/${{matrix.build}}
-      #   shell: cmd
-      #   run: OpenCppCoverage.exe --export_type cobertura:${{github.workspace}}\coverage.xml --config_file "${{github.workspace}}\opencppcoverage.txt" -- libCZI_UnitTests.exe
-
-      # - name: Upload Coverage
-      #   uses: codecov/codecov-action@v4
-      #   if: ${{ (matrix.OS == 'windows-latest') && ( matrix.build == 'Debug') }}
-      #   with:
-      #     files: ./coverage.xml
-      #     fail_ci_if_error: true
-      #     verbose: true
-      #     # Only one flag to be safe with
-      #     # https://docs.codecov.com/docs/flags#one-to-one-relationship-of-flags-to-uploads
-      #     flags: ${{matrix.OS}}
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-
       # gather the CZIrepair-binary and put it into a folder - it will be zipped with the upload step
       - name: Package
         if: ${{ (matrix.OS == 'windows-latest') && ( matrix.build == 'Release') }}

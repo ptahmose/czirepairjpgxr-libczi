@@ -2,13 +2,14 @@
 
 #include <string>
 
+/// Values that represent the command - the operation this program should perform.
 enum class Command
 {
     Invalid = 0,
 
-    DryRun,
+    DryRun, ///< An enum constant representing the "dry run" option - i.e. just determine what would be done.
 
-    Patch,
+    Patch,  ///< An enum constant representing the "patch option" - i.e. actually patch the file if necessary.
 };
 
 enum class Verbosity

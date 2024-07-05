@@ -9,16 +9,25 @@ std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::G
 {
     std::vector<SubBlockDimensionInfoRepairInfo> result;
 
+    // go through all sub-blocks
     reader->EnumerateSubBlocks(
         [&](int index, const SubBlockInfo& subblock_info)->bool
         {
+            // we are only interested in JPGXR-compressed sub-blocks
             if (subblock_info.GetCompressionMode() == CompressionMode::JpgXr)
             {
-                auto sub_block = reader->ReadSubBlock(index);
+                // read the sub-block
+                const auto sub_block = reader->ReadSubBlock(index);
 
+                // determine the width and height of the JPGXR-compressed bitmap
                 uint32_t width_from_jpgxr, height_from_jpgxr;
-                sub_block->TryGetWidthAndHeightOfJpgxrCompressedBitmap(width_from_jpgxr, height_from_jpgxr);
+                if (!sub_block->TryGetWidthAndHeightOfJpgxrCompressedBitmap(width_from_jpgxr, height_from_jpgxr))
+                {
+                    throw runtime_error("Failed to determine the width and height of the JPGXR-compressed bitmap.");
+                }
 
+                // Now, compare the width and height of the JPGXR-compressed bitmap with the width and height in the dimension-info.
+                // If they differ, we need to fix the dimension-info - add the sub-block to the list of sub-blocks that need to be fixed.
                 SubBlockDimensionInfoRepairInfo repair_info;
                 repair_info.sub_block_index = index;
                 if (subblock_info.physicalSize.w != width_from_jpgxr)
@@ -31,6 +40,7 @@ std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::G
                     repair_info.fixed_size_y = height_from_jpgxr;
                 }
 
+                // If the width or height of the sub-block should be fixed, add the sub-block to the list of sub-blocks that need to be fixed.
                 if (repair_info.IsFixedSizeXValid() || repair_info.IsFixedSizeYValid())
                 {
                     result.push_back(repair_info);

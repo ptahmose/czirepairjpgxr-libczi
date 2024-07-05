@@ -15,19 +15,19 @@ namespace
 {
     void DryRun(const CommandLineOptions& options)
     {
-        shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
-        auto reader = libCZI::CreateCZIReader();
+        const shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
+        const auto reader = libCZI::CreateCZIReader();
         reader->Open(stream);
 
         vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info = RepairUtilities::GetRepairInfo(reader.get());
 
         if (repair_info.empty())
         {
-            cout << "No repair needed." << endl;
+            cout << "No repair needed." << std::endl;
         }
         else
         {
-            cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << endl;
+            cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << std::endl;
 
             if (options.IsVerbosityGreaterOrEqual(Verbosity::Verbose))
             {
@@ -38,7 +38,7 @@ namespace
                     cout << "SubBlockIndex: " << info.sub_block_index << " -> size in 'dimension_info': " <<
                         sub_block_info.physicalSize.w << "x" << sub_block_info.physicalSize.h << ", JPGXR: " <<
                         (info.IsFixedSizeXValid() ? info.fixed_size_x : sub_block_info.physicalSize.w) << "x" <<
-                        (info.IsFixedSizeYValid() ? info.fixed_size_y : sub_block_info.physicalSize.h) << endl;
+                        (info.IsFixedSizeYValid() ? info.fixed_size_y : sub_block_info.physicalSize.h) << std::endl;
                 }
             }
         }
@@ -49,8 +49,8 @@ namespace
         vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info;
 
         {
-            shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
-            auto reader = libCZI::CreateCZIReader();
+            const shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
+            const auto reader = libCZI::CreateCZIReader();
             reader->Open(stream);
 
             repair_info = RepairUtilities::GetRepairInfo(reader.get());
@@ -62,33 +62,32 @@ namespace
             }
             else
             {
-                cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << endl;
+                cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << std::endl;
 
                 if (options.IsVerbosityGreaterOrEqual(Verbosity::Verbose))
                 {
                     for (const auto& info : repair_info)
                     {
                         cout << "SubBlockIndex: " << info.sub_block_index << " -> size in 'dimension_info': " <<
-                            info.fixed_size_x << "x" << info.fixed_size_y << endl;
-                        cout << endl;
+                            info.fixed_size_x << "x" << info.fixed_size_y << std::endl;
+                        cout << std::endl;
                     }
                 }
             }
         }
 
-        cout << "Now opening the file in read-write-mode and will patch the file." << endl;
+        cout << "Now opening the file in read-write-mode and will patch the file." << std::endl;
         shared_ptr<IInputOutputStream> input_output_stream = libCZI::CreateInputOutputStreamForFile(options.GetCZIFilename().c_str());
 
         RepairUtilities::PatchSubBlockDimensionInfoInSubBlockDirectory(input_output_stream.get(), repair_info);
-        cout << "Patched the subblock-directory." << endl;
+        cout << "Patched the subblock-directory." << std::endl;
 
         RepairUtilities::PatchSubBlocks(input_output_stream.get(), repair_info);
-        cout << "Patched the subblocks." << endl;
+        cout << "Patched the subblocks." << std::endl;
 
         input_output_stream.reset();
     }
 }
-
 
 int main(int argc, char** argv)
 {
@@ -107,11 +106,28 @@ int main(int argc, char** argv)
     }
     else if (commandline_parsing_result == CommandLineOptions::ParseResult::Exit)
     {
-        return 0;
+        return EXIT_SUCCESS;
     }
 
-    //std::cout << "Command: " << static_cast<int>(options.GetCommand()) << std::endl;
-    //std::cout << "CZI filename: " << options.GetCZIFilename() << std::endl;
+    if (options.IsVerbosityGreaterOrEqual(Verbosity::Verbose))
+    {
+        const char* command_text;
+        switch (options.GetCommand())
+        {
+        case Command::DryRun:
+            command_text = "DryRun";
+            break;
+        case Command::Patch:
+            command_text = "Patch";
+            break;
+        default:
+            command_text = "Invalid";
+            break;
+        }
+
+        std::cout << "Command: " << command_text << std::endl;
+        std::cout << "Filename: " << Utilities::convertToUtf8(options.GetCZIFilename()) << std::endl << std::endl;
+    }
 
     if (options.GetCommand() == Command::DryRun)
     {
@@ -122,6 +138,5 @@ int main(int argc, char** argv)
         Patch(options);
     }
 
-
-    return 0;
+    return EXIT_SUCCESS;
 }
