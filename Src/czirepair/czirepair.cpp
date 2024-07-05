@@ -44,6 +44,8 @@ namespace
                         (info.IsFixedSizeXValid() ? info.fixed_size_x : sub_block_info.physicalSize.w) << "x" <<
                         (info.IsFixedSizeYValid() ? info.fixed_size_y : sub_block_info.physicalSize.h) << std::endl;
                 }
+
+                cout << std::endl;
             }
         }
     }
@@ -72,10 +74,15 @@ namespace
                 {
                     for (const auto& info : repair_info)
                     {
+                        SubBlockInfo sub_block_info;
+                        reader->TryGetSubBlockInfo(info.sub_block_index, &sub_block_info);
                         cout << "SubBlockIndex: " << info.sub_block_index << " -> size in 'dimension_info': " <<
-                            info.fixed_size_x << "x" << info.fixed_size_y << std::endl;
-                        cout << std::endl;
+                            sub_block_info.physicalSize.w << "x" << sub_block_info.physicalSize.h << ", JPGXR: " <<
+                            (info.IsFixedSizeXValid() ? info.fixed_size_x : sub_block_info.physicalSize.w) << "x" <<
+                            (info.IsFixedSizeYValid() ? info.fixed_size_y : sub_block_info.physicalSize.h) << std::endl;
                     }
+
+                    cout << std::endl;
                 }
             }
         }
