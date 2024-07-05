@@ -11,8 +11,84 @@
 using namespace std;
 using namespace libCZI;
 
-static void DryRun(const CommandLineOptions& options);
-static void Patch(const CommandLineOptions& options);
+namespace
+{
+    void DryRun(const CommandLineOptions& options)
+    {
+        shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
+        auto reader = libCZI::CreateCZIReader();
+        reader->Open(stream);
+
+        vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info = RepairUtilities::GetRepairInfo(reader.get());
+
+        if (repair_info.empty())
+        {
+            cout << "No repair needed." << endl;
+        }
+        else
+        {
+            cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << endl;
+
+            if (options.IsVerbosityGreaterOrEqual(Verbosity::Verbose))
+            {
+                for (const auto& info : repair_info)
+                {
+                    SubBlockInfo sub_block_info;
+                    reader->TryGetSubBlockInfo(info.sub_block_index, &sub_block_info);
+                    cout << "SubBlockIndex: " << info.sub_block_index << " -> size in 'dimension_info': " <<
+                        sub_block_info.physicalSize.w << "x" << sub_block_info.physicalSize.h << ", JPGXR: " <<
+                        (info.IsFixedSizeXValid() ? info.fixed_size_x : sub_block_info.physicalSize.w) << "x" <<
+                        (info.IsFixedSizeYValid() ? info.fixed_size_y : sub_block_info.physicalSize.h) << endl;
+                }
+            }
+        }
+    }
+
+    void Patch(const CommandLineOptions& options)
+    {
+        vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info;
+
+        {
+            shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
+            auto reader = libCZI::CreateCZIReader();
+            reader->Open(stream);
+
+            repair_info = RepairUtilities::GetRepairInfo(reader.get());
+
+            if (repair_info.empty())
+            {
+                cout << "No repair needed." << endl;
+                return;
+            }
+            else
+            {
+                cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << endl;
+
+                if (options.IsVerbosityGreaterOrEqual(Verbosity::Verbose))
+                {
+                    for (const auto& info : repair_info)
+                    {
+                        cout << "SubBlockIndex: " << info.sub_block_index << " -> size in 'dimension_info': " <<
+                            info.fixed_size_x << "x" << info.fixed_size_y << endl;
+                        cout << endl;
+                    }
+                }
+            }
+        }
+
+        cout << "Now opening the file in read-write-mode and will patch the file." << endl;
+        shared_ptr<IInputOutputStream> input_output_stream = libCZI::CreateInputOutputStreamForFile(options.GetCZIFilename().c_str());
+
+        RepairUtilities::PatchSubBlockDimensionInfoInSubBlockDirectory(input_output_stream.get(), repair_info);
+        cout << "Patched the subblock-directory." << endl;
+
+        RepairUtilities::PatchSubBlocks(input_output_stream.get(), repair_info);
+        cout << "Patched the subblocks." << endl;
+
+        input_output_stream.reset();
+    }
+}
+
 
 int main(int argc, char** argv)
 {
@@ -34,7 +110,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    std::cout << "Command: " << static_cast<int>(options.GetCommand()) << std::endl;
+    //std::cout << "Command: " << static_cast<int>(options.GetCommand()) << std::endl;
     //std::cout << "CZI filename: " << options.GetCZIFilename() << std::endl;
 
     if (options.GetCommand() == Command::DryRun)
@@ -48,53 +124,4 @@ int main(int argc, char** argv)
 
 
     return 0;
-}
-
-void DryRun(const CommandLineOptions& options)
-{
-    shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
-    auto reader = libCZI::CreateCZIReader();
-    reader->Open(stream);
-
-    vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info = RepairUtilities::GetRepairInfo(reader.get());
-
-    if (repair_info.empty())
-    {
-        cout << "No repair needed." << endl;
-    }
-    else
-    {
-        cout << "Found discrepancies with " << repair_info.size() << " sub-block(s)." << endl;
-
-        if (options.IsVerbosityGreaterOrEqual(Verbosity::Verbose))
-        {
-            for (const auto& info : repair_info)
-            {
-                SubBlockInfo sub_block_info;
-                reader->TryGetSubBlockInfo(info.sub_block_index, &sub_block_info);
-                cout << "SubBlockIndex: " << info.sub_block_index << " -> size in 'dimension_info': " <<
-                    sub_block_info.physicalSize.w << "x" << sub_block_info.physicalSize.h << ", JPGXR: " <<
-                    (info.IsFixedSizeXValid() ? info.fixed_size_x : sub_block_info.physicalSize.w) << "x" << 
-                    (info.IsFixedSizeYValid() ? info.fixed_size_y : sub_block_info.physicalSize.h) << endl;
-            }
-        }
-    }
-}
-
-void Patch(const CommandLineOptions& options)
-{
-    vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info;
-
-    {
-        shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
-        auto spReader = libCZI::CreateCZIReader();
-        spReader->Open(stream);
-
-        repair_info = RepairUtilities::GetRepairInfo(spReader.get());
-    }
-
-    shared_ptr<IInputOutputStream> input_output_stream = libCZI::CreateInputOutputStreamForFile(options.GetCZIFilename().c_str());
-    RepairUtilities::PatchSubBlockDimensionInfo(input_output_stream.get(), repair_info);
-    RepairUtilities::PatchSubBlocks(input_output_stream.get(), repair_info);
-    input_output_stream.reset();
 }

@@ -1,6 +1,6 @@
 #include "repairutilities.h"
 
-#include <iostream>
+#include "../libCZI/CziParse.h"
 
 using namespace std;
 using namespace libCZI;
@@ -43,7 +43,7 @@ std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::G
     return result;
 }
 
-void RepairUtilities::PatchSubBlockDimensionInfo(libCZI::IInputOutputStream* io_stream, const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list)
+void RepairUtilities::PatchSubBlockDimensionInfoInSubBlockDirectory(libCZI::IInputOutputStream* io_stream, const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list)
 {
     CFileHeaderSegmentData file_header_segment_data = CCZIParse::ReadFileHeaderSegmentData(io_stream);
 
