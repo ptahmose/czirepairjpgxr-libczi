@@ -37,8 +37,8 @@ CommandLineOptions::ParseResult CommandLineOptions::CommandLineOptions::Parse(in
     // specify the string-to-enum-mapping for "command"
     std::map<string, Command> map_string_to_command
     {
-        { "DryRun",                   Command::DryRun },
-        { "Patch",                    Command::Patch },
+        { "DryRun", Command::DryRun },
+        { "Patch",  Command::Patch },
     };
 
     const static VerbosityValidator verbosity_validator;
@@ -50,8 +50,8 @@ CommandLineOptions::ParseResult CommandLineOptions::CommandLineOptions::Parse(in
     string argument_verbosity;
 
     cli_app.add_option("-c,--command", argument_command,
-        R"(COMMAND can be one of 'DryRun' or 'Patch')")
-        ->default_val(Command::Patch)
+        R"(Can be one of 'DryRun' or 'Patch' - only with 'Patch' the CZI-file is modified. Default is 'DryRun'.)")
+        ->default_val(Command::DryRun)
         ->option_text("COMMAND")
         ->transform(CLI::CheckedTransformer(map_string_to_command, CLI::ignore_case));
 
