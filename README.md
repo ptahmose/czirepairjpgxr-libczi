@@ -1,8 +1,8 @@
 # CZIrepair
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 [![REUSE status](https://api.reuse.software/badge/github.com/ZEISS/libczi)](https://api.reuse.software/info/github.com/ZEISS/libczi)
-[![CMake](https://github.com/ZEISS/libczi/actions/workflows/cmake.yml/badge.svg?branch=main&event=push)](https://github.com/ptahmose/czirepairjpgxr-libczi/actions/workflows/cmake.yml)
-[![MegaLinter](https://github.com/ZEISS/libczi/actions/workflows/mega-linter.yml/badge.svg?branch=main&event=push)](https://github.com/ptahmose/czirepairjpgxr-libczi/actions/workflows/mega-linter.yml)
+[![CMake](https://github.com/ptahmose/czirepairjpgxr-libczi/actions/workflows/cmake.yml/badge.svg?branch=main&event=push)](https://github.com/ptahmose/czirepairjpgxr-libczi/actions/workflows/cmake.yml)
+[![MegaLinter](https://github.com/ptahmose/czirepairjpgxr-libczi/actions/workflows/mega-linter.yml/badge.svg?branch=main&event=push)](https://github.com/ptahmose/czirepairjpgxr-libczi/actions/workflows/mega-linter.yml)
 
 ## What
 This is repo contains a console application **CZIrepair** which can be used to fix a certain type of malformed CZIs. It is only one type of corruption that the
