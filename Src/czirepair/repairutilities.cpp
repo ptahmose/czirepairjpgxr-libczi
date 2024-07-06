@@ -9,9 +9,14 @@
 using namespace std;
 using namespace libCZI;
 
-std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::GetRepairInfo(libCZI::ICZIReader* reader)
+std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::GetRepairInfo(libCZI::ICZIReader* reader, const std::function<void(const ProgressInfo&)>& progress_callback)
 {
     std::vector<SubBlockDimensionInfoRepairInfo> result;
+
+    const auto statistics = reader->GetStatistics();
+    ProgressInfo progress_info;
+    progress_info.total_sub_block_count = statistics.subBlockCount;
+    progress_info.current_sub_block_index = 0;
 
     // go through all sub-blocks
     reader->EnumerateSubBlocks(
@@ -48,6 +53,12 @@ std::vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> RepairUtilities::G
                 if (repair_info.IsFixedSizeXValid() || repair_info.IsFixedSizeYValid())
                 {
                     result.push_back(repair_info);
+                }
+
+                if (progress_callback)
+                {
+                    ++progress_info.current_sub_block_index;
+                    progress_callback(progress_info);
                 }
             }
 

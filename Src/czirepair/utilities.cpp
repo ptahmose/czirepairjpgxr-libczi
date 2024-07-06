@@ -10,7 +10,11 @@
 
 #if defined(WIN32ENV)
 #include <Windows.h>
+#include <io.h>    // For _isatty and _fileno
+#else
+#include <unistd.h>  // For isatty and fileno
 #endif
+
 
 using namespace std;
 
@@ -18,7 +22,7 @@ std::string Utilities::convertToUtf8(const std::wstring& wide_str)
 {
 #if defined(WIN32ENV)
     int byte_count = WideCharToMultiByte(CP_UTF8, 0, wide_str.c_str(), -1, NULL, 0, NULL, NULL);
-    if (byte_count == 0) 
+    if (byte_count == 0)
     {
         // Handle error (e.g., invalid wstring)
         return "";  // Empty string on error
@@ -42,7 +46,7 @@ std::wstring Utilities::convertUtf8ToUCS2(const std::string& utf8_str)
 {
 #if defined(WIN32ENV)
     int wide_char_count = MultiByteToWideChar(CP_UTF8, 0, utf8_str.c_str(), -1, NULL, 0);
-    if (wide_char_count == 0) 
+    if (wide_char_count == 0)
     {
         // Handle error (e.g., invalid UTF-8)
         return L"";  // Empty wstring on error
@@ -59,6 +63,15 @@ std::wstring Utilities::convertUtf8ToUCS2(const std::string& utf8_str)
     std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8conv;
     std::wstring conv = utf8conv.from_bytes(utf8_str);
     return conv;
+#endif
+}
+
+bool Utilities::IsStdOutATerminal()
+{
+#if defined(WIN32ENV)
+    return _isatty(_fileno(stdout)) != 0;
+#else
+    return isatty(fileno(stdout)) != 0;
 #endif
 }
 

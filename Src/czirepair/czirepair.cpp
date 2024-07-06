@@ -6,6 +6,7 @@
 #include "platform_defines.h"
 
 #include <iostream>
+#include <functional>
 
 #include "repairutilities.h"
 #include "utilities.h"
@@ -17,13 +18,46 @@ using namespace libCZI;
 
 namespace
 {
+    class ProgressReporter
+    {
+        int max_line_length_{ -1 };
+    public:
+        void operator()(const RepairUtilities::ProgressInfo& progress_info)
+        {
+            ostringstream oss;
+            oss << "Processing sub-block " << progress_info.current_sub_block_index << " of " << progress_info.total_sub_block_count << '\r';
+            const auto line = oss.str();
+            this->max_line_length_ = max(this->max_line_length_, static_cast<int>(line.size()));
+            cout << oss.str();
+        }
+
+        void ClearLine()
+        {
+            if (this->max_line_length_ > 0)
+            {
+                cout << string(this->max_line_length_, ' ') << '\r';
+                this->max_line_length_ = -1;
+            }
+        }
+    };
+
     void DryRun(const CommandLineOptions& options)
     {
         const shared_ptr<IStream> stream = libCZI::CreateStreamFromFile(options.GetCZIFilename().c_str());
         const auto reader = libCZI::CreateCZIReader();
         reader->Open(stream);
 
-        vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info = RepairUtilities::GetRepairInfo(reader.get());
+        std::function<void(const RepairUtilities::ProgressInfo&)> progress_reporter_functor;
+        ProgressReporter progress_reporter;
+        if (Utilities::IsStdOutATerminal() && options.IsVerbosityGreaterOrEqual(Verbosity::Normal))
+        {
+            progress_reporter_functor = std::ref(progress_reporter);
+        }
+
+        vector<RepairUtilities::SubBlockDimensionInfoRepairInfo> repair_info = RepairUtilities::GetRepairInfo(
+            reader.get(),
+            progress_reporter_functor);
+        progress_reporter.ClearLine();
 
         if (repair_info.empty())
         {
@@ -59,12 +93,19 @@ namespace
             const auto reader = libCZI::CreateCZIReader();
             reader->Open(stream);
 
-            repair_info = RepairUtilities::GetRepairInfo(reader.get());
+            std::function<void(const RepairUtilities::ProgressInfo&)> progress_reporter_functor;
+            ProgressReporter progress_reporter;
+            if (Utilities::IsStdOutATerminal() && options.IsVerbosityGreaterOrEqual(Verbosity::Normal))
+            {
+                progress_reporter_functor = std::ref(progress_reporter);
+            }
+
+            repair_info = RepairUtilities::GetRepairInfo(reader.get(), progress_reporter_functor);
+            progress_reporter.ClearLine();
 
             if (repair_info.empty())
             {
                 cout << "No repair needed." << endl;
-                return;
             }
             else
             {

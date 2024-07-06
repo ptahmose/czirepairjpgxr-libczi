@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <functional>
 #include "../libCZI/libCZI.h"
 
 class RepairUtilities
@@ -30,7 +31,13 @@ public:
         bool IsFixedSizeYValid() const { return fixed_size_y != std::numeric_limits<std::uint32_t>::max(); }
     };
 
-    static std::vector<SubBlockDimensionInfoRepairInfo> GetRepairInfo(libCZI::ICZIReader* reader);
+    struct ProgressInfo
+    {
+        int current_sub_block_index{ -1 };
+        int total_sub_block_count{ -1 };
+    };
+
+    static std::vector<SubBlockDimensionInfoRepairInfo> GetRepairInfo(libCZI::ICZIReader* reader, const std::function<void(const ProgressInfo&)>& progress_callback);
 
     static void PatchSubBlockDimensionInfoInSubBlockDirectory(libCZI::IInputOutputStream* io_stream, const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list);
     static void PatchSubBlocks(libCZI::IInputOutputStream* io_stream, const std::vector<SubBlockDimensionInfoRepairInfo>& patch_list);
