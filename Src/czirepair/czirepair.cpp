@@ -139,6 +139,20 @@ namespace
 
         input_output_stream.reset();
     }
+
+    int DoOperationAndHandleException(const CommandLineOptions& options, const function<void(const CommandLineOptions&)> operation)
+    {
+        try
+        {
+            operation(options);
+            return EXIT_SUCCESS;
+        }
+        catch (const exception& e)
+        {
+            cerr << "An error occurred: " << e.what() << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
 }
 
 int main(int argc, char** argv)
@@ -181,14 +195,15 @@ int main(int argc, char** argv)
         std::cout << "Filename: " << Utilities::convertToUtf8(options.GetCZIFilename()) << std::endl << std::endl;
     }
 
+    int return_code = EXIT_FAILURE;
     if (options.GetCommand() == Command::DryRun)
     {
-        DryRun(options);
+        return_code = DoOperationAndHandleException(options, DryRun);
     }
     else if (options.GetCommand() == Command::Patch)
     {
-        Patch(options);
+        return_code = DoOperationAndHandleException(options, Patch);
     }
 
-    return EXIT_SUCCESS;
+    return return_code;
 }
